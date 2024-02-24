@@ -18,8 +18,6 @@
  */
 package com.pinterest.secor.util;
 
-import com.twitter.ostrich.stats.Stats;
-
 /**
  * Utilities to interact with Ostrich stats exporter.
  *
@@ -29,17 +27,14 @@ public class StatsUtil {
     public static void setLabel(String name, String value) {
         long threadId = Thread.currentThread().getId();
         name += "." + threadId;
-        Stats.setLabel(name, value);
     }
 
     public static void clearLabel(String name) {
         long threadId = Thread.currentThread().getId();
         name += "." + threadId;
-        Stats.clearLabel(name);
     }
 
     public static void incr(String name) {
-      Stats.incr(name);
     }
 
 }

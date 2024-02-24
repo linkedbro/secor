@@ -18,7 +18,6 @@
  */
 package com.pinterest.secor.main;
 
-import com.pinterest.secor.common.monitoring.OstrichAdminService;
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.common.ShutdownHookRegistry;
 import com.pinterest.secor.consumer.Consumer;
@@ -65,8 +64,6 @@ public class ConsumerMain {
             MetricCollector metricCollector = ReflectionUtil.createMetricCollector(config.getMetricsCollectorClass());
             metricCollector.initialize(config);
 
-            OstrichAdminService ostrichService = new OstrichAdminService(config);
-            ostrichService.start();
             FileUtil.configure(config);
 
             LogFileDeleter logFileDeleter = new LogFileDeleter(config);
