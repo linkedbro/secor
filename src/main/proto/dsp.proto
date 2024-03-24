@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+//package dsp;
+
+option java_multiple_files = true;
+option java_package = "com.pinterest.secor.proto";
+//option java_outer_classname = "DspProtos";
+
+message DspEvent {
+  optional string timestamp = 1;
+  optional string event_id = 2;
+  optional google.protobuf.Timestamp bid_timestamp = 3; // datetime
+  optional string device_id = 4;
+  optional string advertiser_id = 5;
+  optional string campaign_id = 6;
+  optional string creative_id = 7;
+  optional string publisher_id = 8;
+  optional string impression_id = 9;
+  optional string currency = 10;
+  optional double spend = 11; //Decimal64(8)
+  optional int32 views = 12;  // int32
+  optional int32 clicks = 13; // int32
+  optional int32 installs = 14; //Int32
+}
