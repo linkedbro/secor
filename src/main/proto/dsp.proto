@@ -1,25 +1,35 @@
 syntax = "proto3";
 
-import "google/protobuf/timestamp.proto";
+//import "google/protobuf/timestamp.proto";
 //package dsp;
 
 option java_multiple_files = true;
 option java_package = "com.pinterest.secor.proto";
-//option java_outer_classname = "DspProtos";
+option java_outer_classname = "Dsp";
 
-message DspEvent {
-  optional string timestamp = 1;
+message BillEvent {
+  optional int64 timestamp = 1;
   optional string event_id = 2;
-  optional google.protobuf.Timestamp bid_timestamp = 3; // datetime
-  optional string device_id = 4;
-  optional string advertiser_id = 5;
-  optional string campaign_id = 6;
-  optional string creative_id = 7;
-  optional string publisher_id = 8;
-  optional string impression_id = 9;
-  optional string currency = 10;
-  optional double spend = 11; //Decimal64(8)
-  optional int32 views = 12;  // int32
-  optional int32 clicks = 13; // int32
-  optional int32 installs = 14; //Int32
+  optional string request = 3;
+  optional string platform = 4;
+  optional string device_id = 5;
+  optional string bill_type = 6;
+  optional string bill_currency = 7;
+  optional double bill_price = 8;
+  optional string bid_currency = 9;
+  optional double bid_price = 10;
+  optional double win_price = 11;
+  optional int64 bid_timestamp = 12;
+  optional int64 win_timestamp = 13;
+  optional int64 view_timestamp = 14;
+  map<string, int64> post_timestamp = 15;
+  optional string customer_id = 16;
+  optional string advertiser_id = 17;
+  optional string advertiser_app_id = 18;
+  optional string campaign_id = 19;
+  optional string creative_id = 20;
+  optional string ssp_id = 21;
+  optional string publisher_id = 22;
+  optional string publisher_app_id = 23;
+  optional string impression_id = 24;
 }
