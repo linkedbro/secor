@@ -18,20 +18,22 @@
  */
 package com.pinterest.secor.main;
 
+import java.util.LinkedList;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.common.ShutdownHookRegistry;
 import com.pinterest.secor.consumer.Consumer;
 import com.pinterest.secor.io.StagingDirectoryCleaner;
 import com.pinterest.secor.monitoring.MetricCollector;
+import com.pinterest.secor.parser.PartitionFinalizer;
 import com.pinterest.secor.tools.LogFileDeleter;
 import com.pinterest.secor.util.FileUtil;
 import com.pinterest.secor.util.IdUtil;
 import com.pinterest.secor.util.RateLimitUtil;
 import com.pinterest.secor.util.ReflectionUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.LinkedList;
 
 /**
  * Secor consumer.  See
@@ -69,6 +71,25 @@ public class ConsumerMain {
             LogFileDeleter logFileDeleter = new LogFileDeleter(config);
             logFileDeleter.deleteOldLogs();
 
+            PartitionFinalizer finalizer = new PartitionFinalizer(config);
+            Thread partitioner = new Thread(() -> {
+                while (true) {
+                    try {
+                        finalizer.finalizePartitions();
+                    } catch (Exception e) {
+                        LOG.error("Failed to finalize partitions", e);
+                    }
+                    try {
+                        Thread.sleep(600000);
+                    } catch (InterruptedException e) {
+                        LOG.error("Exiting");
+                        break;
+                    }
+                }
+            });
+            partitioner.setName("partition finalizer");
+            partitioner.start();
+
             RateLimitUtil.configure(config);
             LOG.info("starting {} consumer threads", config.getConsumerThreads());
             LinkedList<Consumer> consumers = new LinkedList<Consumer>();
@@ -80,6 +101,7 @@ public class ConsumerMain {
             for (Consumer consumer : consumers) {
                 consumer.join();
             }
+            partitioner.interrupt();
         } catch (Throwable t) {
             LOG.error("Consumer failed", t);
             System.exit(1);

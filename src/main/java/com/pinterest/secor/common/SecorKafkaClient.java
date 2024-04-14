@@ -37,8 +37,10 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Consumer;
 
 public class SecorKafkaClient implements KafkaClient {
     public static final int MAX_READ_POLL_ATTEMPTS = 10;
@@ -118,7 +120,16 @@ public class SecorKafkaClient implements KafkaClient {
         props.put("key.deserializer", ByteArrayDeserializer.class);
         props.put("value.deserializer", ByteArrayDeserializer.class);
         props.put("max.poll.records", 1);
+
+        optionalConfig(config.getSaslJaasConfig(), conf -> props.put("sasl.jaas.config", conf));
+        optionalConfig(config.getSaslMechanism(), conf -> props.put("sasl.mechanism", conf));
+        optionalConfig(config.getSecurityProtocol(), conf -> props.put("security.protocol", conf));
+
         mKafkaConsumer = new KafkaConsumer<>(props);
         mKafkaAdminClient = KafkaAdminClient.create(props);
+    }
+
+    private void optionalConfig(String maybeConf, Consumer<String> configConsumer) {
+        Optional.ofNullable(maybeConf).filter(conf -> !conf.isEmpty()).ifPresent(configConsumer);
     }
 }

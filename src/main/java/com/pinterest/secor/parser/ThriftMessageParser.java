@@ -24,6 +24,7 @@ import org.apache.thrift.TException;
 import org.apache.thrift.TFieldIdEnum;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TProtocolFactory;
+import org.apache.thrift.transport.TTransportException;
 
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.message.Message;
@@ -60,7 +61,7 @@ public class ThriftMessageParser extends TimestampedMessageParser {
 
     public ThriftMessageParser(SecorConfig config)
             throws InstantiationException, IllegalAccessException,
-            ClassNotFoundException {
+            ClassNotFoundException, TTransportException {
         super(config);
         TProtocolFactory protocolFactory = null;
         String protocolName = mConfig.getThriftProtocolClass();

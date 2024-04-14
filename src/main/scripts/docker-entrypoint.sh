@@ -35,7 +35,7 @@ if [ ! -z "$KAFKA_SASL_MECHANISM" ]; then
     echo "kafka.new.consumer.sasl.mechanism=$KAFKA_SASL_MECHANISM"
 fi
 if [ ! -z "$KAFKA_SASL_JAAS_CONFIG" ]; then
-    sed -i s/^kafka.new.consumer.sasl.jaas.config=.*/#/
+    sed -i s/^kafka.new.consumer.sasl.jaas.config=.*/#/ secor.common.properties
     echo "kafka.new.consumer.sasl.jaas.config=$KAFKA_SASL_JAAS_CONFIG" >> secor.common.properties
     echo "kafka.new.consumer.sasl.jaas.config=KAFKA_SASL_JAAS_CONFIG"
 fi
@@ -155,6 +155,14 @@ if [ ! -z "$SECOR_MAX_FILE_SECONDS" ]; then
     echo "secor.max.file.age.seconds=$SECOR_MAX_FILE_SECONDS"
 fi
 
+if [ ! -z "$SECOR_HIVE_DBNAME" ]; then
+    SECOR_CONFIG="$SECOR_CONFIG -Dsecor.hive.dbname=$SECOR_HIVE_DBNAME"
+    echo "secor.hive.dbname=$SECOR_HIVE_DBNAME"
+fi
+if [ ! -z "$SECOR_HIVE_URIS" ]; then
+    SECOR_CONFIG="$SECOR_CONFIG -Dsecor.hive.uris=$SECOR_HIVE_URIS"
+    echo "secor.hive.uris=$SECOR_HIVE_URIS"
+fi
 
 if [ ! -z "$SECOR_KAFKA_TOPIC_FILTER" ]; then
     SECOR_CONFIG="$SECOR_CONFIG -Dsecor.kafka.topic_filter=$SECOR_KAFKA_TOPIC_FILTER"

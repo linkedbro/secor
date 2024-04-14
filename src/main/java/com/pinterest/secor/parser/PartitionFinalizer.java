@@ -18,6 +18,15 @@
  */
 package com.pinterest.secor.parser;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Stack;
+
+import org.apache.hadoop.io.compress.CompressionCodec;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.pinterest.secor.common.KafkaClient;
 import com.pinterest.secor.common.LogFilePath;
 import com.pinterest.secor.common.SecorConfig;
@@ -27,14 +36,6 @@ import com.pinterest.secor.message.Message;
 import com.pinterest.secor.util.CompressionUtil;
 import com.pinterest.secor.util.FileUtil;
 import com.pinterest.secor.util.ReflectionUtil;
-import org.apache.hadoop.io.compress.CompressionCodec;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Stack;
 
 /**
  * Partition finalizer writes _SUCCESS files to date partitions that very likely won't be receiving
@@ -50,6 +51,7 @@ public class PartitionFinalizer {
     private final TimestampedMessageParser mMessageParser;
     private final KafkaClient mKafkaClient;
     private final QuboleClient mQuboleClient;
+    private final HmsClient mHmsClient;
     private final String mFileExtension;
     private final int mLookbackPeriods;
 
@@ -62,6 +64,7 @@ public class PartitionFinalizer {
         mMessageParser = (TimestampedMessageParser) ReflectionUtil.createMessageParser(
           mConfig.getMessageParserClass(), mConfig);
         mQuboleClient = new QuboleClient(mConfig);
+        mHmsClient = new HmsClient(mConfig);
         if (mConfig.getFileExtension() != null && !mConfig.getFileExtension().isEmpty()) {
             mFileExtension = mConfig.getFileExtension();
         } else if (mConfig.getCompressionCodec() != null && !mConfig.getCompressionCodec().isEmpty()) {
@@ -170,7 +173,7 @@ public class PartitionFinalizer {
                         String hivePrefix = null;
                         try {
                             hivePrefix = mConfig.getHivePrefix();
-                            hiveTableName = hivePrefix + topic;
+                            hiveTableName = hivePrefix + topic.replace("-", "_");
                             LOG.info("Hive table name from prefix: {}", hiveTableName);
                         } catch (RuntimeException ex) {
                             LOG.warn("HivePrefix is not defined.  Skip hive registration");
@@ -178,6 +181,9 @@ public class PartitionFinalizer {
                     }
                     if (hiveTableName != null && mConfig.getQuboleEnabled()) {
                         mQuboleClient.addPartition(hiveTableName, sb.toString());
+                    }
+                    if (hiveTableName != null) {
+                        mHmsClient.addPartition(hiveTableName, sb.toString());
                     }
                 } catch (Exception e) {
                     LOG.error("failed to finalize topic " + topic, e);

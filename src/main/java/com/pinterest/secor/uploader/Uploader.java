@@ -311,7 +311,7 @@ public class Uploader {
             final long size = mFileRegistry.getSize(topicPartition);
             final long modificationAgeSec = mFileRegistry.getModificationAgeSec(topicPartition);
             final int fileCount = mFileRegistry.getActiveFileCount();
-            LOG.debug("size: " + size + " modificationAge: " + modificationAgeSec);
+            LOG.info("size: " + size + " modificationAge: " + modificationAgeSec);
             shouldUpload = forceUpload ||
                            activeFileCountExceeded(fileCount) ||
                            size >= mConfig.getMaxFileSizeBytes() ||

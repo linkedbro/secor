@@ -175,6 +175,7 @@ public class Consumer extends Thread {
                 if (mDeterministicUploadPolicyTracker != null ||
                     nMessages++ % checkMessagesPerSecond == 0 ||
                     (now - lastChecked) > checkEveryNSeconds * 1000) {
+                    LOG.info("Check upload policy: messages={}, last={}", nMessages, lastChecked);
                     lastChecked = now;
                     checkUploadPolicy(false);
                 }
@@ -266,6 +267,7 @@ public class Consumer extends Thread {
     }
 
     private void handleWriteError(Message rawMessage, ParsedMessage parsedMessage, Exception exception) {
+        LOG.info("Failed to write message raw: {}; parsed: {}", rawMessage, parsedMessage, exception);
         mMetricCollector.increment("consumer.message_errors.count", rawMessage.getTopic());
         mBadMessages++;
         if (mMaxBadMessages != -1 && mBadMessages > mMaxBadMessages) {
