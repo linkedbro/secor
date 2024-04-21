@@ -23,7 +23,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Stack;
 
-import org.apache.hadoop.io.compress.CompressionCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,8 +32,9 @@ import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.common.TopicPartition;
 import com.pinterest.secor.common.ZookeeperConnector;
 import com.pinterest.secor.message.Message;
-import com.pinterest.secor.util.CompressionUtil;
+import com.pinterest.secor.uploader.UploadManager;
 import com.pinterest.secor.util.FileUtil;
+import com.pinterest.secor.util.IdUtil;
 import com.pinterest.secor.util.ReflectionUtil;
 
 /**
@@ -50,9 +50,9 @@ public class PartitionFinalizer {
     private final ZookeeperConnector mZookeeperConnector;
     private final TimestampedMessageParser mMessageParser;
     private final KafkaClient mKafkaClient;
+    private final UploadManager mUploadManager;
     private final QuboleClient mQuboleClient;
     private final HmsClient mHmsClient;
-    private final String mFileExtension;
     private final int mLookbackPeriods;
 
     public PartitionFinalizer(SecorConfig config) throws Exception {
@@ -63,16 +63,9 @@ public class PartitionFinalizer {
         mZookeeperConnector = new ZookeeperConnector(mConfig);
         mMessageParser = (TimestampedMessageParser) ReflectionUtil.createMessageParser(
           mConfig.getMessageParserClass(), mConfig);
+        mUploadManager = ReflectionUtil.createUploadManager(mConfig.getUploadManagerClass(), mConfig);
         mQuboleClient = new QuboleClient(mConfig);
         mHmsClient = new HmsClient(mConfig);
-        if (mConfig.getFileExtension() != null && !mConfig.getFileExtension().isEmpty()) {
-            mFileExtension = mConfig.getFileExtension();
-        } else if (mConfig.getCompressionCodec() != null && !mConfig.getCompressionCodec().isEmpty()) {
-            CompressionCodec codec = CompressionUtil.createCompressionCodec(mConfig.getCompressionCodec());
-            mFileExtension = codec.getDefaultExtension();
-        } else {
-            mFileExtension = "";
-        }
         mLookbackPeriods = config.getFinalizerLookbackPeriods();
         LOG.info("Lookback periods: " + mLookbackPeriods);
     }
@@ -99,7 +92,7 @@ public class PartitionFinalizer {
     }
 
     private void finalizePartitionsUpTo(String topic, String[] uptoPartitions) throws Exception {
-        String prefix = FileUtil.getPrefix(topic, mConfig);
+        String prefix = mConfig.getLocalPath() + '/' + IdUtil.getLocalMessageDir();
         LOG.info("Finalize up to (but not include) {}, dim: {}",
             uptoPartitions, uptoPartitions.length);
 
@@ -109,26 +102,22 @@ public class PartitionFinalizer {
         // Do not include the upTo partition
         // Stop at the first partition which already have the SUCCESS file
         for (int i = 0; i < mLookbackPeriods; i++) {
-            LOG.info("Looking for partition: " + Arrays.toString(previous));
+            LOG.info("Looking for partition: {}", Arrays.toString(previous));
             LogFilePath logFilePath = new LogFilePath(prefix, topic, previous,
-                mConfig.getGeneration(), 0, 0, mFileExtension);
-
-            if (FileUtil.s3PathPrefixIsAltered(logFilePath.getLogFilePath(), mConfig)) {
-                logFilePath = logFilePath.withPrefix(FileUtil.getS3AlternativePrefix(mConfig));
-            }
-
-            String logFileDir = logFilePath.getLogFileDir();
-            if (FileUtil.exists(logFileDir)) {
-                String successFilePath = logFileDir + "/_SUCCESS";
-                if (FileUtil.exists(successFilePath)) {
-                    LOG.info(
-                        "SuccessFile exist already, short circuit return. " + successFilePath);
+                mConfig.getGeneration(), 0, 0, "");
+            logFilePath = logFilePath.withName("");
+            if (mUploadManager.exists(logFilePath)) {
+                logFilePath = logFilePath.withName("_SUCCESS");
+                if (mUploadManager.exists(logFilePath)) {
+                    LOG.info("SuccessFile exist already, short circuit return: {}",
+                            logFilePath.getLogFilePath());
                     break;
                 }
-                LOG.info("Folder {} exists and ready to be finalized.", logFileDir);
+                LOG.info("Folder {} exists and ready to be finalized.",
+                        logFilePath.getLogFilePath());
                 toBeFinalized.push(previous);
             } else {
-                LOG.info("Folder {} doesn't exist, skip", logFileDir);
+                LOG.info("Folder {} doesn't exist, skip", logFilePath.getLogFilePath());
             }
             previous = mMessageParser.getPreviousPartitions(previous);
         }
@@ -145,7 +134,7 @@ public class PartitionFinalizer {
         // crashes (which creates unfinalized partition folders in between)
         while (!toBeFinalized.isEmpty()) {
             String[] current = toBeFinalized.pop();
-            LOG.info("Finalizing partition: " + Arrays.toString(current));
+            LOG.info("Finalizing partition: {}", Arrays.toString(current));
             // We only perform hive registration on the last dimension of the partition array
             // i.e. only do hive registration for the hourly folder, but not for the daily
             if (uptoPartitions.length == current.length) {
@@ -193,18 +182,10 @@ public class PartitionFinalizer {
 
             // Generate the SUCCESS file at the end
             LogFilePath logFilePath = new LogFilePath(prefix, topic, current,
-                mConfig.getGeneration(), 0, 0, mFileExtension);
-
-            if (FileUtil.s3PathPrefixIsAltered(logFilePath.getLogFilePath(), mConfig)) {
-                logFilePath = logFilePath.withPrefix(FileUtil.getS3AlternativePrefix(mConfig));
-                LOG.info("Will finalize alternative s3 logFilePath {}", logFilePath);
-            }
-
-            String logFileDir = logFilePath.getLogFileDir();
-            String successFilePath = logFileDir + "/_SUCCESS";
-
-            LOG.info("touching file {}", successFilePath);
-            FileUtil.touch(successFilePath);
+                mConfig.getGeneration(), 0, 0, "");
+            logFilePath = logFilePath.withName("_SUCCESS");
+            FileUtil.touch(logFilePath.getLogFilePath());
+            mUploadManager.upload(logFilePath);
         }
     }
 

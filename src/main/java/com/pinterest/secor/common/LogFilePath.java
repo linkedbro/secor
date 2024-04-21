@@ -55,6 +55,7 @@ public class LogFilePath {
     private final int[] mKafkaPartitions;
     private final long[] mOffsets;
     private final String mExtension;
+    private String mOverrideName;
     private MessageDigest messageDigest;
 
 
@@ -142,8 +143,15 @@ public class LogFilePath {
     }
 
     public LogFilePath withPrefix(String prefix) {
-        return new LogFilePath(prefix, mTopic, mPartitions, mGeneration, mKafkaPartitions, mOffsets,
-            mExtension);
+        return new LogFilePath(prefix, mTopic, mPartitions, mGeneration, mKafkaPartitions, mOffsets, mExtension)
+                .withName(mOverrideName);
+    }
+
+    public LogFilePath withName(String overrideName) {
+        LogFilePath result = new LogFilePath(
+                mPrefix, mTopic, mPartitions, mGeneration, mKafkaPartitions, mOffsets, mExtension);
+        result.mOverrideName = overrideName;
+        return result;
     }
 
     public String getLogFileParentDir() {
@@ -167,6 +175,10 @@ public class LogFilePath {
     }
 
     private String getLogFileBasename() {
+        if (mOverrideName != null) {
+            return mOverrideName;
+        }
+
         ArrayList<String> basenameElements = new ArrayList<String>();
         basenameElements.add(Integer.toString(mGeneration));
         if (mKafkaPartitions.length > 1) {

@@ -39,6 +39,8 @@ import com.amazonaws.services.s3.transfer.Upload;
 import com.pinterest.secor.common.LogFilePath;
 import com.pinterest.secor.common.SecorConfig;
 import com.pinterest.secor.util.FileUtil;
+
+import org.apache.commons.lang.NotImplementedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -179,6 +181,10 @@ public class S3UploadManager extends UploadManager {
 
         Upload upload = mManager.upload(uploadRequest);
         return new S3UploadHandle(upload);
+    }
+
+    public boolean exists(LogFilePath localPath) {
+        throw new NotImplementedException();
     }
 
     private void enableCustomerEncryption(PutObjectRequest uploadRequest) {

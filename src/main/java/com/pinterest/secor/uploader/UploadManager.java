@@ -34,4 +34,6 @@ public abstract class UploadManager {
     }
 
     public abstract Handle<?> upload(LogFilePath localPath) throws Exception;
+
+    public abstract boolean exists(LogFilePath localPath) throws Exception;
 }

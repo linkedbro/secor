@@ -42,6 +42,8 @@ import java.util.Collections;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+
+import org.apache.commons.lang.NotImplementedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.threeten.bp.Duration;
@@ -133,6 +135,10 @@ public class GsUploadManager extends UploadManager {
         });
 
         return new FutureHandle(f);
+    }
+
+    public boolean exists(LogFilePath localPath) throws Exception {
+        throw new NotImplementedException();
     }
 
     private static Storage getService(String credentialsPath, int connectTimeoutMs, int readTimeoutMs) throws Exception {

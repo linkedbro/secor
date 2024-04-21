@@ -19,6 +19,7 @@ import com.oracle.bmc.auth.AuthenticationDetailsProvider;
 import com.oracle.bmc.auth.ConfigFileAuthenticationDetailsProvider;
 import com.oracle.bmc.auth.SimpleAuthenticationDetailsProvider;
 import com.oracle.bmc.objectstorage.ObjectStorageClient;
+import com.oracle.bmc.objectstorage.requests.ListObjectsRequest;
 import com.oracle.bmc.objectstorage.requests.PutObjectRequest;
 import com.pinterest.secor.common.LogFilePath;
 import com.pinterest.secor.common.SecorConfig;
@@ -28,6 +29,7 @@ public class OciUploadManager extends UploadManager {
 
     private static final ExecutorService executor = Executors.newFixedThreadPool(256);
 
+    // https://docs.oracle.com/en-us/iaas/tools/java/3.39.2/
     private final ObjectStorageClient mClient;
     private final String mNamespace;
     private final String mBucket;
@@ -90,5 +92,18 @@ public class OciUploadManager extends UploadManager {
         });
 
         return new FutureHandle(f);
+    }
+
+    public boolean exists(LogFilePath localPath) throws Exception {
+        final String key = localPath.withPrefix(mPath).getLogFilePath();
+        LOG.info("checking objects {} with prefix {} in bucket {}", localPath.getLogFilePath(), key, mBucket);
+
+        ListObjectsRequest request = ListObjectsRequest.builder()
+                .namespaceName(mNamespace)
+                .bucketName(mBucket)
+                .prefix(key)
+                .build();
+
+        return !mClient.listObjects(request).getListObjects().getObjects().isEmpty();
     }
 }

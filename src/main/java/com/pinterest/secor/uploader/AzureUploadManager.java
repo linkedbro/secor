@@ -93,4 +93,19 @@ public class AzureUploadManager extends UploadManager {
 
         return new FutureHandle(f);
     }
+
+    public boolean exists(LogFilePath localPath) throws Exception {
+        final String azureContainer = mConfig.getAzureContainer();
+        final String azureKey = localPath.withPrefix(mConfig.getAzurePath()).getLogFilePath();
+
+        try {
+            CloudBlobContainer container = blobClient.getContainerReference(azureContainer);
+            container.createIfNotExists();
+
+            CloudBlockBlob blob = container.getBlockBlobReference(azureKey);
+            return blob.exists();
+        } catch (URISyntaxException | StorageException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

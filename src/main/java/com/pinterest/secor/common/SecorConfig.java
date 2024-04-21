@@ -576,7 +576,7 @@ public class SecorConfig {
     }
 
     public String getHivePrefix() {
-        return getString("secor.hive.prefix");
+        return getString("secor.hive.prefix", "");
     }
 
     public String getHiveTableName(String topic) {
