@@ -155,6 +155,10 @@ if [ ! -z "$SECOR_MAX_FILE_SECONDS" ]; then
     echo "secor.max.file.age.seconds=$SECOR_MAX_FILE_SECONDS"
 fi
 
+if [ ! -z "$SECOR_HIVE_CATALOG" ]; then
+    SECOR_CONFIG="$SECOR_CONFIG -Dsecor.hive.catalog=$SECOR_HIVE_CATALOG"
+    echo "secor.hive.catalog=$SECOR_HIVE_CATALOG"
+fi
 if [ ! -z "$SECOR_HIVE_DBNAME" ]; then
     SECOR_CONFIG="$SECOR_CONFIG -Dsecor.hive.dbname=$SECOR_HIVE_DBNAME"
     echo "secor.hive.dbname=$SECOR_HIVE_DBNAME"
