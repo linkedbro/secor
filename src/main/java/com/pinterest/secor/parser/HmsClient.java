@@ -1,6 +1,7 @@
 package com.pinterest.secor.parser;
 
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -41,16 +42,15 @@ public class HmsClient {
         }
     }
 
-    public void addPartition(String table, String partition) throws TException {
+    public void addPartition(String table, String[] partition) throws TException {
         LOG.info("Add partition {} to table {}", partition, table);
         if (mHiveMetaStoreClient != null) {
-            String[] partitions = partition.split(",");
-            Partition added;
-            if (partitions.length > 1) {
-                added = mHiveMetaStoreClient.appendPartition(mDbName, table, Arrays.asList(partitions));
-            } else {
-                added = mHiveMetaStoreClient.appendPartition(mDbName, table, partition);
+            List<String> partitions = new ArrayList<>();
+            for (String part : partition) {
+                String[] p = part.split("=");
+                partitions.add(p[1]); // HMS needs value only
             }
+            Partition added = mHiveMetaStoreClient.appendPartition(mDbName, table, partitions);
             LOG.info("Added partition {}", added);
         } else {
             LOG.error("Skip to add partition due to empty client", mLastException);

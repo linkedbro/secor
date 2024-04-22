@@ -139,22 +139,7 @@ public class PartitionFinalizer {
             // i.e. only do hive registration for the hourly folder, but not for the daily
             if (uptoPartitions.length == current.length) {
                 try {
-                    StringBuilder sb = new StringBuilder();
-                    for (int i = 0; i < current.length; i++) {
-                        String par = current[i];
-                        // We expect the partition array in the form of key=value if
-                        // they need to go through hive registration
-                        String[] parts = par.split("=");
-                        assert parts.length == 2 : "wrong partition format: " + par;
-                        if (i > 0) {
-                            sb.append(",");
-                        }
-                        sb.append(parts[0]);
-                        sb.append("='");
-                        sb.append(parts[1]);
-                        sb.append("'");
-                    }
-                    LOG.info("Hive partition string: " + sb);
+                    LOG.info("Hive partition string: " + String.join(", ", current));
 
                     String hiveTableName = mConfig.getHiveTableName(topic);
                     LOG.info("Hive table name from config: {}", hiveTableName);
@@ -169,10 +154,10 @@ public class PartitionFinalizer {
                         }
                     }
                     if (hiveTableName != null && mConfig.getQuboleEnabled()) {
-                        mQuboleClient.addPartition(hiveTableName, sb.toString());
+                        mQuboleClient.addPartition(hiveTableName, current);
                     }
                     if (hiveTableName != null) {
-                        mHmsClient.addPartition(hiveTableName, sb.toString());
+                        mHmsClient.addPartition(hiveTableName, current);
                     }
                 } catch (Exception e) {
                     LOG.error("failed to finalize topic " + topic, e);

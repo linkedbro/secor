@@ -120,10 +120,23 @@ public class QuboleClient {
         throw new IOException("Qubole commandId" + commandId + " failed to return within timeout.");
     }
 
-    public void addPartition(String table, String partition) throws IOException,
-            InterruptedException {
-        String queryStr = "ALTER TABLE " + table + " ADD IF NOT EXISTS PARTITION (" + partition +
-                ")";
+    public void addPartition(String table, String[] partition) throws IOException, InterruptedException {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < partition.length; i++) {
+            String par = partition[i];
+            // We expect the partition array in the form of key=value if
+            // they need to go through hive registration
+            String[] parts = par.split("=");
+            assert parts.length == 2 : "wrong partition format: " + par;
+            if (i > 0) {
+                sb.append(",");
+            }
+            sb.append(parts[0]);
+            sb.append("='");
+            sb.append(parts[1]);
+            sb.append("'");
+        }
+        String queryStr = "ALTER TABLE " + table + " ADD IF NOT EXISTS PARTITION (" + sb + ")";
         int commandId = query(queryStr);
         waitForCompletion(commandId, MAX_QUBOLE_WAIT_TIME_MS);
     }
