@@ -10,20 +10,40 @@ def getAgentTemplate(){
         runAsGroup: 0
       containers:
       - name: docker
+        image: docker:latest
+        command:
+        - /bin/cat
+        tty: true
+        env:
+          - name: DOCKER_TLS_CERTDIR
+            value: /certs/client
+          - name: DOCKER_CERT_PATH
+            value: /certs/client
+          - name: DOCKER_TLS_VERIFY
+            value: 1
+        volumeMounts:
+        - name: docker-socket
+          mountPath: /var/run
+        - name: dind-certs
+          mountPath: /certs/client
+      - name: docker-daemon
         image: docker:dind
         securityContext:
           privileged: true
-        tty: true
         env:
         - name: DOCKER_TLS_CERTDIR
-          value: ""
+          value: /certs
         - name: DOCKER_OPTS
           value: "--ipv6=false"
         volumeMounts:
-        - name: dind-storage
-          mountPath: /var/lib/docker
+          - name: docker-socket
+            mountPath: /var/run
+          - name: dind-certs
+            mountPath: /certs/client
       volumes:
-      - name: dind-storage
+      - name: docker-socket
+        emptyDir: {}
+      - name: dind-certs
         emptyDir: {}
     '''
 }
@@ -72,7 +92,6 @@ pipeline {
                         dir("."){
                             container('docker') {
                                 script {
-                                    def dockerOptions = "--ipv6=false"
                                     sleep(10)
                                     docker.image('maven:3.9.6-eclipse-temurin-17-focal').inside('-v $HOME/.m2:/root/.m2 -v $(pwd):/usr/src/secor -w /usr/src/secor') {
                                         sh '_JAVA_OPTIONS=-Djava.net.preferIPv4Stack=true mvn clean package -DskipTests=true'
