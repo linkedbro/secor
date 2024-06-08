@@ -26,6 +26,7 @@ import java.util.Stack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Strings;
 import com.pinterest.secor.common.KafkaClient;
 import com.pinterest.secor.common.LogFilePath;
 import com.pinterest.secor.common.SecorConfig;
@@ -177,7 +178,7 @@ public class PartitionFinalizer {
     public void finalizePartitions() throws Exception {
         List<String> topics = mZookeeperConnector.getCommittedOffsetTopics();
         for (String topic : topics) {
-            if (!topic.matches(mConfig.getKafkaTopicFilter())) {
+            if (!isSubscribed(topic)) {
                 LOG.info("skipping topic {}", topic);
             } else {
                 LOG.info("finalizing topic {}", topic);
@@ -188,5 +189,18 @@ public class PartitionFinalizer {
                 }
             }
         }
+    }
+
+    private boolean isSubscribed(String topic) {
+        String[] subscribeList = mConfig.getKafkaTopicList();
+        if (subscribeList.length == 0 || Strings.isNullOrEmpty(subscribeList[0])) {
+            return topic.matches(mConfig.getKafkaTopicFilter());
+        }
+        for (String subscribe : subscribeList) {
+            if (topic.equals(subscribe)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

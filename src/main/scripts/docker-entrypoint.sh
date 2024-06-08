@@ -168,6 +168,10 @@ if [ ! -z "$SECOR_HIVE_URIS" ]; then
     echo "secor.hive.uris=$SECOR_HIVE_URIS"
 fi
 
+if [ ! -z "$SECOR_KAFKA_TOPIC_LIST" ]; then
+    SECOR_CONFIG="$SECOR_CONFIG -Dkafka.new.consumer.topic.list=$SECOR_KAFKA_TOPIC_LIST"
+    echo "kafka.new.consumer.topic.list=$SECOR_KAFKA_TOPIC_LIST"
+fi
 if [ ! -z "$SECOR_KAFKA_TOPIC_FILTER" ]; then
     SECOR_CONFIG="$SECOR_CONFIG -Dsecor.kafka.topic_filter=$SECOR_KAFKA_TOPIC_FILTER"
     echo "secor.kafka.topic_filter=$SECOR_KAFKA_TOPIC_FILTER"
@@ -175,6 +179,14 @@ fi
 if [ ! -z "$SECOR_WRITER_FACTORY" ]; then
     SECOR_CONFIG="$SECOR_CONFIG -Dsecor.file.reader.writer.factory=$SECOR_WRITER_FACTORY"
     echo "secor.file.reader.writer.factory=$SECOR_WRITER_FACTORY"
+fi
+if [ ! -z "$SECOR_COMPRESSION_CODEC" ]; then
+    SECOR_CONFIG="$SECOR_CONFIG -Dsecor.compression.codec=$SECOR_COMPRESSION_CODEC"
+    echo "secor.compression.codec=$SECOR_COMPRESSION_CODEC"
+fi
+if [ ! -z "$SECOR_FILE_EXTENSION" ]; then
+    SECOR_CONFIG="$SECOR_CONFIG -Dsecor.file.extension=$SECOR_FILE_EXTENSION"
+    echo "secor.file.extension=$SECOR_FILE_EXTENSION"
 fi
 if [ ! -z "$SECOR_MESSAGE_PARSER" ]; then
     SECOR_CONFIG="$SECOR_CONFIG -Dsecor.message.parser.class=$SECOR_MESSAGE_PARSER"
