@@ -61,12 +61,12 @@ pipeline {
         helm_base = "secor"
         helm_chart = "secor"
 
-        namespace = "qa"
         service = "secor"
     }
 
     parameters {
-        string(name: 'TARGET_ENV', defaultValue: 'qa', description: 'Target environment')
+        string(name: 'NAMESPACE', defaultValue: 'qa', description: 'namespace')
+        string(name: 'TARGET_ENV', defaultValue: 'dsp-bids', description: 'Target environment')
         string(name: 'HELM_BRANCH', defaultValue: 'dev', description: 'Helm branch')
     }
 
@@ -82,7 +82,7 @@ pipeline {
                     steps{
                         script{
                             def commit = env.GIT_COMMIT.substring(0, 7)
-                            image_tag = "${service}-${params.TARGET_ENV}-${commit}"
+                            image_tag = "${params.NAMESPACE}-${service}-${params.TARGET_ENV}-${commit}"
                         }
                     }
                 }
@@ -119,7 +119,7 @@ pipeline {
                     [$class: 'StringParameterValue', name: 'SERVICE', value: "${service}-${params.TARGET_ENV}"],
                     [$class: 'StringParameterValue', name: 'DOCKER_REPO', value: docker_repo],
                     [$class: 'StringParameterValue', name: 'IMAGE_TAG', value: image_tag],
-                    [$class: 'StringParameterValue', name: 'NAMESPACE', value: namespace],
+                    [$class: 'StringParameterValue', name: 'NAMESPACE', value: "${params.NAMESPACE}"],
                     [$class: 'BooleanParameterValue', name: 'DRY_RUN', value: 'false'],
                 ]
             }
