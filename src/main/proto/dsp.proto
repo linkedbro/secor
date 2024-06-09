@@ -34,7 +34,10 @@ message BillEvent {
   optional string publisher_app_id = 24;
   optional string publisher_app_bundle = 25;
   optional string impression_id = 26;
-  optional string device_ifa = 27;
-  optional string device_lid = 28;
-  optional string device_os = 29;
+  optional string user_id = 27;
+  optional string device_os = 28;
+  optional int32 device_lmt = 29;
+  optional string device_lid = 30;
+  optional string device_ifa = 31;
+  optional string device_fp = 32;
 }
