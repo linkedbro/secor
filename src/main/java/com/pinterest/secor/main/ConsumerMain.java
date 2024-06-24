@@ -19,6 +19,7 @@
 package com.pinterest.secor.main;
 
 import java.util.LinkedList;
+import java.util.Random;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,17 +74,17 @@ public class ConsumerMain {
 
             PartitionFinalizer finalizer = new PartitionFinalizer(config);
             Thread partitioner = new Thread(() -> {
+                Random random = new Random();
                 while (true) {
                     try {
+                        Thread.sleep(random.nextInt(120_000));
                         finalizer.finalizePartitions();
-                    } catch (Exception e) {
-                        LOG.error("Failed to finalize partitions", e);
-                    }
-                    try {
-                        Thread.sleep(600000);
+                        Thread.sleep(600_000);
                     } catch (InterruptedException e) {
                         LOG.error("Exiting");
                         break;
+                    } catch (Exception e) {
+                        LOG.error("Failed to finalize partitions", e);
                     }
                 }
             });

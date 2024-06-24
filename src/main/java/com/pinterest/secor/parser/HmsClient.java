@@ -38,7 +38,7 @@ public class HmsClient {
         } else {
             mLastException = new RuntimeException(
                     String.format("Bad HMS config: catalog=%s, db=%s, uri=%s", catalog, mDbName, uri));
-            LOG.error("Skip to create HMS client", mLastException);
+            LOG.warn("Skip to create HMS client", mLastException);
         }
     }
 
@@ -53,7 +53,7 @@ public class HmsClient {
             Partition added = mHiveMetaStoreClient.appendPartition(mDbName, table, partitions);
             LOG.info("Added partition {}", added);
         } else {
-            LOG.error("Skip to add partition due to empty client", mLastException);
+            LOG.warn("Skip to add partition due to empty client", mLastException);
         }
     }
 }
